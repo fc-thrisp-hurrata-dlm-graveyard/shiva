@@ -27,6 +27,7 @@ Godeps/*
 !Godeps/Godeps.json
 
 shv
+shiva
 resources
 _back
 *.out

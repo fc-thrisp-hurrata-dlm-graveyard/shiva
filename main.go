@@ -1,6 +1,5 @@
 package main
 
-/*
 import (
 	"context"
 	"fmt"
@@ -9,8 +8,11 @@ import (
 
 	"github.com/Laughs-In-Flowers/flip"
 	"github.com/Laughs-In-Flowers/log"
-	"github.com/Laughs-In-Flowers/shiva/shv"
-	//"github.com/Laughs-In-Flowers/shiva/shv/graphics"
+	"github.com/Laughs-In-Flowers/shiva/lib/engine"
+	"github.com/Laughs-In-Flowers/shiva/lib/graphics"
+
+	// initiailize & register providers with graphics package
+	_ "github.com/Laughs-In-Flowers/shiva/lib/graphics/providers"
 )
 
 type Options struct {
@@ -22,7 +24,7 @@ type Options struct {
 
 func defaultOptions() *Options {
 	wd, _ := os.Getwd()
-	defaultProvider := "NULL" //graphics.DefaultProvider.String()
+	defaultProvider := graphics.DefaultProvider.String()
 	return &Options{
 		false, "null", defaultProvider, wd, "main.lua",
 	}
@@ -93,13 +95,13 @@ func basicErr(e error) {
 	}
 }
 
-func newEngine(o *Options) *shv.Engine {
-	configuration := []shv.Config{
-		shv.SetLogger(o.formatter),
-		shv.SetGraphics(o.provider),
-		shv.SetLuaModule(o.dir, o.file),
+func newEngine(o *Options) *engine.Engine {
+	configuration := []engine.Config{
+		engine.SetLogger(o.formatter),
+		engine.SetGraphics(o.provider),
+		engine.SetLua(o.dir, o.file),
 	}
-	v, err := shv.New(o.debug, configuration...)
+	v, err := engine.New(o.debug, configuration...)
 	if err != nil {
 		basicErr(err)
 	}
@@ -121,8 +123,8 @@ func PlayCommand(o *Options) flip.Command {
 		"shiva play",
 		1,
 		func(c context.Context, a []string) flip.ExitStatus {
-			v := newEngine(o)
-			v.Run()
+			e := newEngine(o)
+			e.Run()
 			return flip.ExitSuccess
 		},
 		fs,
@@ -155,4 +157,3 @@ func main() {
 	C.Execute(ctx, os.Args)
 	os.Exit(0)
 }
-*/

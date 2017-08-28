@@ -21,14 +21,13 @@ type Shaderer interface {
 	GenerateProfile(material.Material) *Profile
 	SetProgram(graphics.Provider, *Profile) error
 	GenerateProgram(graphics.Provider, *Profile) (graphics.Program, error)
-	Bind(graphics.Provider, *Bind) error
+	//Bind(graphics.Provider, *Bind) error
 }
 
 type shaderer struct {
 	Templater
 	prog []*Prog
 	prgm []*Program
-	curr *Program
 }
 
 func NewShaderer() *shaderer {
@@ -36,7 +35,6 @@ func NewShaderer() *shaderer {
 		NewTemplater(NewLoaderSet(), EmptyFuncSet()),
 		make([]*Prog, 0),
 		make([]*Program, 0),
-		nil,
 	}
 }
 
@@ -45,7 +43,6 @@ func DefaultShaderer() *shaderer {
 		defaultTemplater(),
 		defaultProg,
 		make([]*Program, 0),
-		nil,
 	}
 }
 
@@ -73,6 +70,7 @@ func (s *shaderer) SetProgram(p graphics.Provider, pr *Profile) error {
 	}
 	h, err = s.GenerateProgram(p, pr)
 	goto USEPROGRAM
+
 USEPROGRAM:
 	p.UseProgram(h)
 	return err
@@ -111,9 +109,9 @@ func (s *shaderer) GenerateProgram(p graphics.Provider, pr *Profile) (graphics.P
 	return prgm.handle, nil
 }
 
-func (s *shaderer) Bind(p graphics.Provider, b *Bind) error {
-	return nil
-}
+//func (s *shaderer) Bind(p graphics.Provider, b *Bind) error {
+//	return nil
+//}
 
 type Templater interface {
 	Render(io.Writer, string, interface{}) error

@@ -4,7 +4,6 @@ import (
 	"github.com/Laughs-In-Flowers/shiva/lib/graphics"
 	"github.com/Laughs-In-Flowers/shiva/lib/graphics/geometry"
 	"github.com/Laughs-In-Flowers/shiva/lib/graphics/material"
-	"github.com/Laughs-In-Flowers/shiva/lib/graphics/mesh"
 	"github.com/Laughs-In-Flowers/shiva/lib/lua"
 	"github.com/Laughs-In-Flowers/shiva/lib/math"
 	"github.com/Laughs-In-Flowers/shiva/lib/render"
@@ -14,25 +13,15 @@ import (
 
 type lines struct {
 	*node
-	mesh.Mesh
-	mvpm graphics.Uniform // UniformMatrix4fv // Model view projection matrix uniform
+	m render.Mesh
 }
 
 func NewLines(tag string, g geometry.Geometry, m material.Material) *lines {
-	mvpm := graphics.UniformMatrix4fv("MVP")
-
-	li := mesh.New(
+	li := render.NewMesh(
 		"LINES",
 		g,
-		func(p graphics.Provider) {
-			// Calculates model view projection matrix and updates uniform
-			//mw := l.MatrixWorld()
-			//var mvpm math32.Matrix4
-			//mvpm.MultiplyMatrices(&rinfo.ViewMatrix, &mw)
-			//mvpm.MultiplyMatrices(&rinfo.ProjMatrix, &mvpm)
-			//l.mvpm.SetMatrix4(&mvpm)
-			//l.mvpm.Transfer(gs)
-			mvpm.Transfer(p)
+		func(r render.Renderer) {
+			//log.Println("lines render func")
 		},
 		graphics.LINES,
 	)
@@ -41,13 +30,31 @@ func NewLines(tag string, g geometry.Geometry, m material.Material) *lines {
 	n := newNode(tag, func(r render.Renderer, n Node) {
 		materials := li.Materials()
 		for _, m := range materials {
-			m.Shader(r)
-			m.Provide(r)
+			m.Render(r)
 		}
 	}, defaultRemovalFn, defaultReplaceFn, lAxisNodeClass, lNodeClass)
 
-	return &lines{n, li, mvpm}
+	return &lines{n, li}
 }
+
+//const lNormalsNodeClass = "NNORMALS"
+
+//func Normals(target mesh.Mesh, tag string, color math.Color, size, lineWidth float32) *lines {
+//	return nil
+//}
+
+//func lnormals(L *l.LState) int {
+//size := math.Pf32(L, 1)
+//a := Axis("axis", size)
+//return pushNode(L, a)
+//	return 0
+//}
+
+//var lNormalsNodeTable = &lua.Table{
+//	lNormalsNodeClass,
+//	[]*lua.Table{nodeTable},
+//	nil, nil, nil,
+//}
 
 const lAxisNodeClass = "NAXIS"
 
@@ -85,5 +92,6 @@ func laxis(L *l.LState) int {
 var lAxisNodeTable = &lua.Table{
 	lAxisNodeClass,
 	[]*lua.Table{nodeTable},
-	nil, nil, nil,
+	defaultIdxMetaFuncs(),
+	nil, nil,
 }

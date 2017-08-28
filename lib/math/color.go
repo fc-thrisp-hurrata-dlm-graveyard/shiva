@@ -1,6 +1,7 @@
 package math
 
 type Color interface {
+	Raw() []float32
 	Set(...float32)
 	SetHex(uint)
 	R() float32
@@ -17,11 +18,15 @@ type Color interface {
 }
 
 type color struct {
-	v *vec4
+	v *VecN
 }
 
 func NewColor(r, g, b, a float32) *color {
 	return &color{Vec4(r, g, b, a)}
+}
+
+func (c *color) Raw() []float32 {
+	return c.v.Raw()
 }
 
 func (c *color) Set(v ...float32) {

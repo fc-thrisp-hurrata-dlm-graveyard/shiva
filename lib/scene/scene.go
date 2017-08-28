@@ -5,6 +5,8 @@ import (
 
 	"github.com/Laughs-In-Flowers/shiva/lib/lua"
 	"github.com/Laughs-In-Flowers/shiva/lib/render"
+	"github.com/go-gl/glfw/v3.2/glfw"
+
 	l "github.com/yuin/gopher-lua"
 )
 
@@ -31,6 +33,12 @@ func (n *nenderable) Count() int {
 	n.Unlock()
 	return count
 }
+
+func (n *nenderable) Renderable() bool {
+	return true
+}
+
+func (n *nenderable) SetRenderable(bool) {}
 
 func (n *nenderable) Render(r render.Renderer) {
 	for _, n := range n.nodes {
@@ -60,16 +68,34 @@ func (n *nenderable) clear() {
 	n.RUnlock()
 }
 
-type Scene struct {
-	render.Renderer
-	n *nenderable
+func (n *nenderable) List() []Node {
+	return n.nodes
 }
 
-func NewScene(r render.Renderer) *Scene {
+type Scene struct {
+	render.Renderer
+	n      *nenderable
+	update bool
+}
+
+var nativeWindow *glfw.Window
+
+func Aspect(w *glfw.Window) float32 {
+	var ret float32
+	if w != nil {
+		width, height := w.GetSize()
+		ret = float32(width) / float32(height)
+	}
+	return ret
+}
+
+func NewScene(r render.Renderer, nw *glfw.Window) *Scene {
 	s := &Scene{
 		r,
 		newNenderable(),
+		true,
 	}
+	nativeWindow = nw
 	currentScene = s
 	return s
 }
@@ -83,12 +109,14 @@ func (s *Scene) Attach(ns ...Node) {
 	for _, n := range ns {
 		s.n.attach(n)
 	}
+	s.update = true
 }
 
 func (s *Scene) Detach(ns ...Node) {
 	for _, n := range ns {
 		s.n.detach(n)
 	}
+	s.update = true
 }
 
 func (s *Scene) Clear() {
@@ -97,6 +125,10 @@ func (s *Scene) Clear() {
 
 func (s *Scene) Count() int {
 	return s.n.Count()
+}
+
+func (s *Scene) Updateable() bool {
+	return s.update
 }
 
 const lSceneClass = "SCENE"
@@ -233,7 +265,10 @@ func RegisterWith() lua.RegisterWith {
 		sr.add(registerWith("scale", lscale, lScaleNodeTable))
 		sr.add(registerWith("rotate", lrotate, lRotateNodeTable))
 		sr.add(registerWith("axis", laxis, lAxisNodeTable))
-		//sr.add(registerWith("", nil, nil, nil))
+		sr.add(registerWith("sphere", lsphere, lSphereNodeTable))
+		sr.add(registerWith("camera", lcamera, lCameraNodeTable))
+		// default orthographic camera
+		// default perspective camera
 		return sr.run(m)
 	}
 }

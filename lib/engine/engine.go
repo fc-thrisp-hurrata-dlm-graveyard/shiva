@@ -330,12 +330,12 @@ func eDisplay(e *Engine) error {
 	return err
 }
 
-func SetDisplay(t string) Config {
-	return NewConfig(50,
-		func(e *Engine) error {
-			return nil
-		})
-}
+//func SetDisplay(system) Config {
+//	return NewConfig(50,
+//		func(e *Engine) error {
+//			return nil
+//		})
+//}
 
 func eInput(e *Engine) error {
 	w, err := display.Window()
@@ -351,6 +351,13 @@ func eInput(e *Engine) error {
 
 	return nil
 }
+
+//func SetInput(system) Config {
+//	return NewConfig(50,
+//		func(e *Engine) error {
+//			return nil
+//		})
+//}
 
 var (
 	luaDir  string = workingDir

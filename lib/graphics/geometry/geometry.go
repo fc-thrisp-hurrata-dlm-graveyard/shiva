@@ -8,7 +8,7 @@ import (
 type Geometer interface {
 	graphics.Initializer
 	graphics.Closer
-	graphics.Renderable
+	graphics.Providable
 	graphics.RefCounter
 }
 
@@ -62,7 +62,7 @@ func (g *geometry) Close() {
 }
 
 func (g *geometry) Renderable() bool {
-	return false
+	return true
 }
 
 func (g *geometry) SetRenderable(b bool) {}

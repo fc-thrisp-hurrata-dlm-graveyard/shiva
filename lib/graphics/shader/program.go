@@ -112,20 +112,29 @@ func (p *Program) Provide(g graphics.Provider) {
 	g.UseProgram(p.handle)
 }
 
-type Bind struct {
+type Bind interface {
+	Bind(graphics.Provider)
+	BindIdx(graphics.Provider, int)
+}
+
+type bind struct {
 	Uniforms []graphics.Uniform
 }
 
-func NewBind(uu ...graphics.Uniform) *Bind {
-	return &Bind{
+func NewBind(uu ...graphics.Uniform) *bind {
+	return &bind{
 		uu,
 	}
 }
 
-func (b *Bind) Bind(p graphics.Provider, pr *Program) {
-	//program := pr.handle
-	//for _, u := range b.Uniforms {
-	//u.Transfer(p, program)
-	// OR TransferIdx ?
-	//}
+func (b *bind) Bind(p graphics.Provider) {
+	for _, u := range b.Uniforms {
+		u.Transfer(p)
+	}
+}
+
+func (b *bind) BindIdx(p graphics.Provider, idx int) {
+	for _, u := range b.Uniforms {
+		u.TransferIdx(p, idx)
+	}
 }

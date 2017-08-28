@@ -77,12 +77,8 @@ func (b *Buff) Stride() int {
 	return stride
 }
 
-//var AttribLocError = xrror.Xrror("unable to retrieve attribute %s location from program %v").Out
-
 func (b *Buff) Provide(p Provider) {
-	bb := b.buffer
-
-	if bb.Bytes() == 0 {
+	if b.buffer.Bytes() == 0 {
 		return
 	}
 
@@ -94,13 +90,9 @@ func (b *Buff) Provide(p Provider) {
 		var offset uint32 = 0
 		elsize := int32(unsafe.Sizeof(float32(0)))
 		for _, attrib := range b.a {
-			var prog Program
-			prog = p.CurrentProgram()
-			if prog == 0 {
-			}
-			loc := p.GetAttribLocation(prog, attrib.Name)
+			loc := p.GetAttribCurrentLocation(attrib.Name)
 			if loc < 0 {
-				continue //return AttribLocError(attrib.Name, prog)
+				continue
 			}
 			p.EnableVertexAttribArray(uint32(loc))
 			p.VertexAttribPointer(uint32(loc), attrib.Size, FLOAT, false, int32(stride), p.Ptr(&offset))
@@ -116,7 +108,8 @@ func (b *Buff) Provide(p Provider) {
 	}
 
 	p.BindBuffer(ARRAY_BUFFER, b.handle)
-	p.BufferData(ARRAY_BUFFER, bb.Bytes(), p.Ptr(&bb[0]), b.usage)
+	p.BufferData(ARRAY_BUFFER, b.buffer.Bytes(), p.Ptr(b.buffer), b.usage)
+	//p.BufferData(ARRAY_BUFFER, b.buffer.Bytes(), p.Ptr(&b.buffer[0]), b.usage)
 	b.update = false
 }
 

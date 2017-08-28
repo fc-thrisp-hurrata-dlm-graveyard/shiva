@@ -1,10 +1,9 @@
-package mesh
+package render
 
 import (
 	"github.com/Laughs-In-Flowers/shiva/lib/graphics"
 	"github.com/Laughs-In-Flowers/shiva/lib/graphics/geometry"
 	"github.com/Laughs-In-Flowers/shiva/lib/graphics/material"
-	"github.com/Laughs-In-Flowers/shiva/lib/render"
 	"github.com/Laughs-In-Flowers/shiva/lib/xrror"
 )
 
@@ -12,12 +11,12 @@ type Mesh interface {
 	graphics.Initializer
 	graphics.Closer
 	graphics.Moder
-	graphics.Renderable
 	Geometer
 	Materializer
+	Renderable
 }
 
-type ProviderFunc func(graphics.Provider)
+type innerRenderFunc func(Renderer)
 
 type mesh struct {
 	tag        string
@@ -25,13 +24,13 @@ type mesh struct {
 	materials  []Material
 	mode       graphics.Enum
 	renderable bool
-	pfn        ProviderFunc
+	rfn        innerRenderFunc
 }
 
-func New(tag string, e geometry.Geometry, pfn ProviderFunc, mode graphics.Enum) *mesh {
+func NewMesh(tag string, e geometry.Geometry, rfn innerRenderFunc, mode graphics.Enum) *mesh {
 	m := &mesh{
 		tag: tag,
-		pfn: pfn,
+		rfn: rfn,
 	}
 	m.Initialize()
 	m.g = e
@@ -69,8 +68,8 @@ func (m *mesh) SetRenderable(as bool) {
 	m.renderable = as
 }
 
-func (m *mesh) Provide(p graphics.Provider) {
-	m.pfn(p)
+func (m *mesh) Render(r Renderer) {
+	m.rfn(r)
 }
 
 type Geometer interface {
@@ -123,31 +122,33 @@ func (m *mesh) AddGroupMaterial(a material.Material, gidx int) error {
 
 type Material struct {
 	parent Mesh
-	m      material.Material // Associated material
-	g      geometry.Geometry // Geometry from parent mesh
-	start  int               // Index of first element in the geometry
-	count  int               // Number of elements
+	m      material.Material
+	g      geometry.Geometry
+	start  int
+	count  int
 }
 
-func (m *Material) Shader(r render.Renderer) {
+func (m *Material) Shader(r Renderer) {
 	pr := r.GenerateProfile(m.m)
 	r.SetProgram(r, pr)
 }
 
-// render
-// 1. underlying material.Material
-// 2. Geometry from parent Mesh
-// 3. parent Mesh
-// 4. elements/arrays
-func (m *Material) Provide(p graphics.Provider) {
-	m.m.Provide(p)
+func (m *Material) Render(r Renderer) {
+	// establish shader to use
+	m.Shader(r)
 
+	// setup underlying material
+	m.m.Provide(r)
+
+	// setup associated geometry
 	gg := m.g
-	gg.Provide(p)
+	gg.Provide(r)
 
+	// setup parent mesh
 	parent := m.parent
-	parent.Provide(p)
+	parent.Render(r)
 
+	//draw
 	count := m.count
 
 	indices := gg.Indices()
@@ -156,11 +157,12 @@ func (m *Material) Provide(p graphics.Provider) {
 		if count == 0 {
 			count = indices.Size()
 		}
-		p.DrawElements(mode, int32(count), graphics.UNSIGNED_INT, p.Ptr(4*uint32(m.start)))
+		val := 4 * uint32(m.start)
+		r.DrawElements(mode, int32(count), graphics.UNSIGNED_INT, r.Ptr(&val))
 	} else {
 		if count == 0 {
 			count = gg.VBOItems()
 		}
-		p.DrawArrays(mode, int32(m.start), int32(count))
+		r.DrawArrays(mode, int32(m.start), int32(count))
 	}
 }

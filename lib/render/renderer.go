@@ -3,6 +3,7 @@ package render
 import (
 	"github.com/Laughs-In-Flowers/shiva/lib/graphics"
 	"github.com/Laughs-In-Flowers/shiva/lib/graphics/shader"
+	"github.com/Laughs-In-Flowers/shiva/lib/math"
 	"github.com/Laughs-In-Flowers/shiva/lib/xrror"
 )
 
@@ -12,8 +13,6 @@ func (t RendererT) String() string {
 	switch t {
 	case FORWARD:
 		return "forward"
-	case DEFERRED:
-		return "deferred"
 	}
 	return "UNKNOWN"
 }
@@ -22,16 +21,13 @@ func StringToRendererT(s string) RendererT {
 	switch s {
 	case "forward":
 		return FORWARD
-	case "deferred":
-		return DEFERRED
 	}
 	return UNKNOWN
 }
 
 const (
-	FORWARD RendererT = iota
-	DEFERRED
-	UNKNOWN
+	UNKNOWN RendererT = iota
+	FORWARD
 )
 
 var DefaultRenderer = FORWARD
@@ -70,18 +66,30 @@ func New(s string, p graphics.Provider) (Renderer, error) {
 }
 
 type Renderable interface {
+	Renderable() bool
+	SetRenderable(bool)
 	Render(Renderer)
+}
+
+type Space interface {
+	ViewMatrice() math.Matrice
+	SetViewMatrice(math.Matrice)
+	ProjectionMatrice() math.Matrice
+	SetProjectionMatrice(math.Matrice)
+	Last() math.Matrice
+	SetLast(math.Matrice)
 }
 
 type Renderer interface {
 	graphics.Provider
 	shader.Shaderer
+	Space
 	Type() RendererT
+	Initialize()
 	Rend(...Renderable)
 }
 
 func init() {
 	RendererRegistry = &rpr{make(map[RendererT]NewRendererFunc)}
 	Register("forward", newForwardRenderer)
-	//Register("deferred", newDeferredRenderer)
 }

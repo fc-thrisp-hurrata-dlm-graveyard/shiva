@@ -3,77 +3,73 @@ package render
 import (
 	"github.com/Laughs-In-Flowers/shiva/lib/graphics"
 	"github.com/Laughs-In-Flowers/shiva/lib/graphics/shader"
+	"github.com/Laughs-In-Flowers/shiva/lib/math"
 )
-
-//type Params struct {
-//vec map[string]Vector
-//mat map[string]Matrice
-//flo map[string]float32
-//}
-
-//func NewParams() *Params {
-//return &Params{
-//make(map[string]Vector),
-//make(map[string]Matrice),
-//make(map[string]float32),
-//}
-//}
-
-//func (p *Params) Vector(k string) Vector {
-//	return nil
-//}
-
-//func (p *Params) Matrice(k string) Matrice {
-//	return nil
-//}
-
-//func (p *Params) Float(k string) float32 {
-//	return 0
-//}
 
 type fRenderer struct {
 	graphics.Provider
 	shader.Shaderer
-	//pass, nextPass, passMask uint32
-	//boundViewport            *viewportState
-	//activeViewport           *viewportState
-	//boundColorMask           *colorMaskState
-	//activeColorMask          *colorMaskState
-	//boundDepth               *depthState
-	//activeDepth              *depthState
-	//boundStencil             *stencilState
-	//activeStencil            *stencilState
-	//boundScissor             *scissorState
-	//activeScissor            *scissorState
-	//boundCullface            *cullFaceState
-	//activeCullFace           *cullFaceState
-	//boundBlend               *blendState
-	//activeBlend              *blendState
-	//maxDrawArraySize         int
-	//numberEnabledVaas        int
-	//params                   *Params
+	view math.Matrice
+	proj math.Matrice
+	last math.Matrice
 }
 
 func newForwardRenderer(gp graphics.Provider) Renderer {
-	return &fRenderer{
+	r := &fRenderer{
 		gp,
 		shader.DefaultShaderer(),
-		//1, 1, 1,
-		//nil, nil,
-		//nil, nil,
-		//nil, nil,
-		//nil, nil,
-		//nil, nil,
-		//nil, nil,
-		//nil, nil,
-		//0,
-		//0,
-		//NewParams(),
+		math.Mat4(), math.Mat4(), math.Mat4(),
 	}
+	r.Initialize()
+	return r
+}
+
+func (r *fRenderer) ViewMatrice() math.Matrice {
+	return r.view
+}
+
+func (r *fRenderer) SetViewMatrice(m math.Matrice) {
+	r.view = m
+}
+
+func (r *fRenderer) ProjectionMatrice() math.Matrice {
+	return r.proj
+}
+
+func (r *fRenderer) SetProjectionMatrice(m math.Matrice) {
+	r.proj = m
+}
+
+func (r *fRenderer) Last() math.Matrice {
+	return r.last
+}
+
+func (r *fRenderer) SetLast(m math.Matrice) {
+	r.last = m
 }
 
 func (r *fRenderer) Type() RendererT {
 	return FORWARD
+}
+
+func (r *fRenderer) Initialize() {
+	r.Clear(graphics.COLOR_BUFFER_BIT | graphics.DEPTH_BUFFER_BIT | graphics.STENCIL_BUFFER_BIT)
+	r.ClearDepth(1)
+	r.ClearStencil(0)
+	r.Enable(graphics.DEPTH_TEST)
+	r.DepthFunc(graphics.LEQUAL)
+	r.FrontFace(graphics.CCW)
+	r.CullFace(graphics.BACK)
+	r.Enable(graphics.CULL_FACE)
+	r.Enable(graphics.BLEND)
+	r.BlendEquation(graphics.FUNC_ADD)
+	r.BlendFunc(graphics.SRC_ALPHA, graphics.ONE_MINUS_SRC_ALPHA)
+	r.Enable(graphics.VERTEX_PROGRAM_POINT_SIZE)
+	r.Enable(graphics.PROGRAM_POINT_SIZE)
+	r.Enable(graphics.MULTISAMPLE)
+	r.Enable(graphics.POLYGON_OFFSET_FILL)
+	r.Enable(graphics.POLYGON_OFFSET_LINE)
+	r.Enable(graphics.POLYGON_OFFSET_POINT)
 }
 
 func (r *fRenderer) Rend(d ...Renderable) {
@@ -89,8 +85,26 @@ func (r *fRenderer) pre() {
 }
 
 func (r *fRenderer) post() {
-	r.UseProgram(0) // unbind current shader program
+	r.UseProgram(0)
 }
+
+//pass, nextPass, passMask uint32
+//boundViewport            *viewportState
+//activeViewport           *viewportState
+//boundColorMask           *colorMaskState
+//activeColorMask          *colorMaskState
+//boundDepth               *depthState
+//activeDepth              *depthState
+//boundStencil             *stencilState
+//activeStencil            *stencilState
+//boundScissor             *scissorState
+//activeScissor            *scissorState
+//boundCullface            *cullFaceState
+//activeCullFace           *cullFaceState
+//boundBlend               *blendState
+//activeBlend              *blendState
+//maxDrawArraySize         int
+//numberEnabledVaas        int
 
 //boundProgramId
 //activeProgram

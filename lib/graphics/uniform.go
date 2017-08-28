@@ -3,137 +3,99 @@ package graphics
 import "fmt"
 
 type Uniform interface {
-	Get() []float32
-	Set(...float32)
+	Update(...float32)
 	Transfer(Provider)
 	TransferIdx(Provider, int)
-	Location(Provider) int32
-	LocationIdx(Provider, int) int32
 }
 
-type innerTransfer func(Provider, int32, *uniform)
+type innerTransfer func(Provider, int32, []float32)
 
 type uniform struct {
-	name    string
-	nameIdx string
-	idx     int
-	v       []float32
-	trf     innerTransfer
+	key    string
+	keyIdx string
+	idx    int
+	value  []float32
+	trf    innerTransfer
 }
 
-func (u *uniform) Get() []float32 {
-	return u.v
+func newUniform(key string, length int, trf innerTransfer) *uniform {
+	return &uniform{
+		key:   key,
+		value: make([]float32, length),
+		trf:   trf,
+	}
 }
 
-func (u *uniform) Geti() int32 {
-	return int32(u.v[0])
+func (u *uniform) Update(v ...float32) {
+	u.value = v
 }
 
-func (u *uniform) Getf() float32 {
-	return u.v[0]
+func (u *uniform) location(p Provider) int32 {
+	return p.GetUniformCurrentLocation(u.key)
 }
 
-func (u *uniform) Set(v ...float32) {
-	u.v = v
-}
-
-func (u *uniform) Location(p Provider) int32 {
-	return p.GetCurrentUniformLocation(u.name)
-}
-
-func (u *uniform) LocationIdx(p Provider, idx int) int32 {
-	if u.nameIdx == "" || u.idx != idx {
-		u.nameIdx = fmt.Sprintf("%s[%d]", u.name, idx)
+func (u *uniform) locationIdx(p Provider, idx int) int32 {
+	if u.keyIdx == "" || u.idx != idx {
+		u.keyIdx = fmt.Sprintf("%s[%d]", u.key, idx)
 		u.idx = idx
 	}
-	return p.GetCurrentUniformLocation(u.nameIdx)
+	return p.GetUniformCurrentLocation(u.keyIdx)
 }
 
 func (u *uniform) Transfer(p Provider) {
-	loc := u.Location(p)
-	u.trf(p, loc, u)
+	loc := u.location(p)
+	u.trf(p, loc, u.value)
 }
 
 func (u *uniform) TransferIdx(p Provider, idx int) {
-	loc := u.LocationIdx(p, idx)
-	u.trf(p, loc, u)
+	loc := u.locationIdx(p, idx)
+	u.trf(p, loc, u.value)
 }
 
-func Uniform1i(name string) Uniform {
-	return &uniform{
-		name: name,
-		trf: func(p Provider, loc int32, u *uniform) {
-			p.Uniform1i(loc, u.Geti())
-		},
-		v: []float32{0},
-	}
+func Uniform1i(key string) Uniform {
+	return newUniform(key, 1, func(p Provider, loc int32, v []float32) {
+		p.Uniform1i(loc, int32(v[0]))
+	})
 }
 
-func Uniform1f(name string) Uniform {
-	return &uniform{
-		name: name,
-		trf: func(p Provider, loc int32, u *uniform) {
-			p.Uniform1f(loc, u.Getf())
-		},
-		v: []float32{0},
-	}
+func Uniform1f(key string) Uniform {
+	return newUniform(key, 1, func(p Provider, loc int32, v []float32) {
+		p.Uniform1f(loc, v[0])
+	})
 }
 
-func Uniform2f(name string) Uniform {
-	return &uniform{
-		name: name,
-		trf: func(p Provider, loc int32, u *uniform) {
-			//p.Uniform2f(u.Location(p), uni.v0)
-		},
-		v: []float32{0, 0},
-	}
+func Uniform2f(key string) Uniform {
+	return newUniform(key, 2, func(p Provider, loc int32, v []float32) {
+		//p.Uniform2f(u.Location(p), uni.v0)
+	})
 }
 
-func Uniform3f(name string) Uniform {
-	return &uniform{
-		name: name,
-		trf: func(p Provider, loc int32, u *uniform) {
-			//p.Uniform3f(u.Location(p), uni.v0)
-		},
-		v: []float32{0, 0, 0},
-	}
+func Uniform3f(key string) Uniform {
+	return newUniform(key, 3, func(p Provider, loc int32, v []float32) {
+		//p.Uniform3f(u.Location(p), uni.v0)
+	})
 }
 
-func Uniform4f(name string) Uniform {
-	return &uniform{
-		name: name,
-		trf: func(p Provider, loc int32, u *uniform) {
-			//p.Uniform4f(u.Location(p), uni.v0)
-		},
-		v: []float32{0, 0, 0, 0},
-	}
+func Uniform4f(key string) Uniform {
+	return newUniform(key, 4, func(p Provider, loc int32, v []float32) {
+		//p.Uniform4f(u.Location(p), uni.v0)
+	})
 }
 
-func UniformMatrix3fv(name string) Uniform {
-	return &uniform{
-		name: name,
-		trf: func(p Provider, loc int32, u *uniform) {
-			//p.UniformMatrix3fv(u.Location(p), uni.v0)
-		},
-		v: []float32{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	}
+func UniformMatrix3fv(key string) Uniform {
+	return newUniform(key, 9, func(p Provider, loc int32, v []float32) {
+		//p.UniformMatrix3fv(u.Location(p), uni.v0)
+	})
 }
 
-func UniformMatrix4fv(name string) Uniform {
-	return &uniform{
-		name: name,
-		trf: func(p Provider, loc int32, u *uniform) {
-			p.UniformMatrix4fv(u.Location(p), 1, false, u.v)
-		},
-		v: []float32{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	}
+func UniformMatrix4fv(key string) Uniform {
+	return newUniform(key, 16, func(p Provider, loc int32, v []float32) {
+		p.UniformMatrix4fv(loc, 1, false, v)
+	})
 }
 
-func Uniform4fv(name string) Uniform {
-	return &uniform{
-		name: name,
-		trf: func(p Provider, loc int32, u *uniform) {
-			//p.Uniform4f(u.Location(p), uni.v0)
-		},
-	}
+func Uniform4fv(key string) Uniform {
+	return newUniform(key, 16, func(p Provider, loc int32, v []float32) {
+		//p.Uniform4f(u.Location(p), uni.v0)
+	})
 }

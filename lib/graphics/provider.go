@@ -25,8 +25,8 @@ func StringToProviderT(s string) ProviderT {
 }
 
 const (
-	OPENGL45 ProviderT = iota
-	UNKNOWN
+	UNKNOWN ProviderT = iota
+	OPENGL45
 )
 
 var DefaultProvider = OPENGL45
@@ -82,7 +82,7 @@ type Shader uint32
 // Bitfield is a typ indicating the uint32 use as a graphics level bitfield
 type Bitfield uint32
 
-// GraphicsProvider represents a common way to interface with graphics
+// Provider represents a common way to interface with graphics
 // 'drivers' like OpenGL or OpenGL ES.
 type Provider interface {
 	// Return version information as string followed by two integers.
@@ -143,6 +143,12 @@ type Provider interface {
 
 	// ClearColor specifies the RGBA value used to clear the color buffers
 	ClearColor(float32, float32, float32, float32)
+
+	//
+	ClearDepth(float32)
+
+	//
+	ClearStencil(int32)
 
 	// CompileShader compiles the shader object
 	CompileShader(Shader)
@@ -235,8 +241,8 @@ type Provider interface {
 	// GetAttribLocation returns the location of a attribute variable
 	GetAttribLocation(Program, string) int32
 
-	// GetCurrentUniformLocation returns the location of a uniform variable relative to current program
-	GetCurrentUniformLocation(string) int32
+	//
+	GetAttribCurrentLocation(string) int32
 
 	// GetError returns the next error
 	GetError() uint32
@@ -255,6 +261,9 @@ type Provider interface {
 
 	// GetUniformLocation returns the location of a uniform variable
 	GetUniformLocation(Program, string) int32
+
+	// GetCurrentUniformLocation returns the location of a uniform variable relative to current program
+	GetUniformCurrentLocation(string) int32
 
 	//
 	LineWidth(float32)

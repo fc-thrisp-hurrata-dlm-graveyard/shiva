@@ -1,6 +1,8 @@
 package math
 
 import (
+	"strings"
+
 	"github.com/Laughs-In-Flowers/shiva/lib/lua"
 	"github.com/davecgh/go-spew/spew"
 
@@ -11,32 +13,340 @@ import (
 
 type Vector interface {
 	MathType
-	Raw() []float32
-	Get(int) float32
-	Set(int, float32)
-	Len() float32
+	Manipulator
+	Getter
+	Setter
+	Length
+	Add(Vector) Vector
+	Clone() Vector
+	Cross(Vector) Vector
+	Dot(Vector) float32
+	Mul(float32) Vector
 	Normalize() Vector
+	Rotate(Quaternion) Vector
+	Sub(Vector) Vector
+}
+
+type VecN struct {
+	tag string
+	v   []float32
+}
+
+func resolveTag(tag string, n int) string {
+	if tag == "" {
+		switch n {
+		case 2:
+			return VEC2
+		case 3:
+			return VEC3
+		case 4:
+			return VEC4
+		}
+		return "UNKNOWN"
+	}
+	return tag
+}
+
+func NewVecN(tag string, n int) *VecN {
+	if shouldPool {
+		return &VecN{tag: tag, v: grabFromPool(n)}
+	} else {
+		return &VecN{tag: tag, v: make([]float32, n)}
+	}
+}
+
+func NewVecNFrom(tag string, initial []float32) *VecN {
+	if initial == nil {
+		return &VecN{tag: tag}
+	}
+	var internal []float32
+	if shouldPool {
+		internal = grabFromPool(len(initial))
+	} else {
+		internal = make([]float32, len(initial))
+	}
+	copy(internal, initial)
+	return &VecN{tag: tag, v: internal}
+}
+
+func (v *VecN) Tag() string {
+	return resolveTag(v.tag, len(v.v))
+}
+
+func (v *VecN) Raw() []float32 {
+	return v.v
+}
+
+func (v *VecN) Get(i int) float32 {
+	return v.v[i]
+}
+
+func oneOf(k string, o ...string) bool {
+	for _, v := range o {
+		if k == v {
+			return true
+		}
+	}
+	return false
+}
+
+func (v *VecN) GetStr(k string) float32 {
+	var ret float32
+	key := strings.ToLower(k)
+	ln := len(v.v)
+	switch {
+	case oneOf(key, "x", "r", "s") && ln >= 1:
+		ret = v.v[0]
+	case oneOf(key, "y", "g", "t") && ln >= 2:
+		ret = v.v[1]
+	case oneOf(key, "z", "b", "p") && ln >= 3:
+		ret = v.v[2]
+	case oneOf(key, "w", "a", "q") && ln >= 4:
+		ret = v.v[3]
+	}
+	return ret
+}
+
+func (v *VecN) Set(i int, val float32) {
+	v.v[i] = val
+}
+
+func (v *VecN) SetStr(k string, val float32) {
+	key := strings.ToLower(k)
+	ln := len(v.v)
+	switch {
+	case oneOf(key, "x", "r", "s") && ln >= 1:
+		v.v[0] = val
+	case oneOf(key, "y", "g", "t") && ln >= 2:
+		v.v[1] = val
+	case oneOf(key, "z", "b", "p") && ln >= 3:
+		v.v[2] = val
+	case oneOf(key, "w", "a", "q") && ln >= 4:
+		v.v[3] = val
+	}
+}
+
+func (v *VecN) Update(in ...float32) {
+	ln := len(v.v)
+	for idx, num := range in {
+		if idx <= ln {
+			v.v[idx] = num
+		}
+	}
+}
+
+func (v *VecN) RawLen() int {
+	return len(v.v)
+}
+
+func (v *VecN) Len() float32 {
+	if v == nil {
+		return float32(glm.NaN())
+	}
+	if len(v.v) == 0 {
+		return 0
+	}
+
+	return float32(glm.Sqrt(float64(v.Dot(v))))
+}
+
+func (v *VecN) Clone() Vector {
+	cv := NewVecN(v.tag, v.RawLen())
+	for idx, val := range v.v {
+		cv.Set(idx, val)
+	}
+	return cv
+}
+
+func (v *VecN) Normalize() Vector {
+	if v == nil {
+		return nil
+	}
+	return v.Mul(1 / v.Len())
+}
+
+func (v *VecN) resize(n int) *VecN {
+	//	if v == nil {
+	//		return NewVecN(n)
+	//	}
+	//
+	//	if n <= cap(v.v) {
+	//		if v.v != nil {
+	//			v.v = v.v[:n]
+	//		} else {
+	//			v.v = []float32{}
+	//		}
+	//		return v
+	//	}
+	//
+	//	if shouldPool && v.v != nil {
+	//		returnToPool(v.v)
+	//	}
+	//	*v = (*NewVecN(n))
+	//
+	return v
+}
+
+func (v *VecN) destroy() {
+	if v == nil || v.v == nil {
+		return
+	}
+
+	if shouldPool {
+		returnToPool(v.v)
+	}
+	v.v = nil
+}
+
+func (v *VecN) Add(o Vector) Vector {
+	if v == nil || o == nil {
+		return nil
+	}
+	size := intMin(len(v.v), o.RawLen())
+	dst := NewVecN("", size)
+
+	for i := 0; i < size; i++ {
+		dst.v[i] = v.v[i] + o.Get(i)
+	}
+
+	return dst
+}
+
+func (v *VecN) Sub(o Vector) Vector {
+	if v == nil || o == nil {
+		return nil
+	}
+	size := intMin(len(v.v), o.RawLen())
+	dst := NewVecN("", size)
+
+	for i := 0; i < size; i++ {
+		dst.v[i] = v.v[i] - o.Get(i)
+	}
+
+	return dst
+}
+
+func (v *VecN) Mul(c float32) Vector {
+	if v == nil {
+		return nil
+	}
+
+	dst := NewVecN("", len(v.v))
+
+	for i, el := range v.v {
+		dst.v[i] = el * c
+	}
+
+	return dst
+}
+
+func (v *VecN) Dot(o Vector) float32 {
+	if v == nil || o == nil || len(v.v) != o.RawLen() {
+		return float32(glm.NaN())
+	}
+
+	var result float32 = 0.0
+	for i, el := range v.v {
+		result += el * o.Get(i)
+	}
+
+	return result
+}
+
+func (v *VecN) Cross(o Vector) Vector {
+	if v == nil || o == nil {
+		return nil
+	}
+	if len(v.v) != 3 || o.RawLen() != 3 {
+		panic("Cannot take binary cross product of non-3D elements (7D cross product not implemented)")
+	}
+
+	dst := NewVecN(VEC3, 3)
+	dst.v[0], dst.v[1], dst.v[2] = v.v[1]*o.Get(2)-v.v[2]*o.Get(1),
+		v.v[2]*o.Get(0)-v.v[0]*o.Get(2),
+		v.v[0]*o.Get(1)-v.v[1]*o.Get(0)
+	return dst
+}
+
+func CrossVectors(a, b Vector) Vector {
+	return a.Cross(b)
+}
+
+func (v *VecN) Rotate(q Quaternion) Vector {
+	vx := v.Get(0)
+	vy := v.Get(1)
+	vz := v.Get(2)
+
+	qw := q.Get(0)
+	qx := q.Get(1)
+	qy := q.Get(2)
+	qz := q.Get(3)
+
+	// calculate quat * vector
+	ix := qw*vx + qy*vz - qz*vy
+	iy := qw*vy + qz*vx - qx*vz
+	iz := qw*vz + qx*vy - qy*vx
+	iw := -qx*vx - qy*vy - qz*vz
+	// calculate result * inverse quat
+	v.Set(0, ix*qw+iw*-qx+iy*-qz-iz*-qy)
+	v.Set(1, iy*qw+iw*-qy+iz*-qx-ix*-qz)
+	v.Set(2, iz*qw+iw*-qz+ix*-qy-iy*-qx)
+	return v
+}
+
+func SetVectorFromMatrice(v Vector, m Matrice, ps ...MxPos) Vector {
+	for _, p := range ps {
+		v.Set(p.Correspondence, m.Get(p.Row, p.Column))
+	}
+	return v
+}
+
+func SetVectorFromRotationMatrix(v Vector, m Matrice) Vector {
+	m11 := m.Get(1, 1)
+	m12 := m.Get(1, 2)
+	m13 := m.Get(1, 3)
+	m22 := m.Get(2, 2)
+	m23 := m.Get(2, 3)
+	m32 := m.Get(3, 2)
+	m33 := m.Get(3, 3)
+
+	var vx, vy, vz float32
+	vy = Asin(Clamp(m13, -1, 1))
+	if Abs(m13) < 0.99999 {
+		vx = Atan2(-m23, m33)
+		vz = Atan2(-m12, m11)
+	} else {
+		vx = Atan2(m32, m22)
+		vz = 0
+	}
+	v.Update(vx, vy, vz)
+	return v
+}
+
+func SetVectorFromQuaternion(v Vector, q Quaternion) Vector {
+	m := Mat4()
+	m.Rotate(q)
+	return SetVectorFromRotationMatrix(v, m)
 }
 
 func ExpectedVector(k string, v interface{}) (Vector, bool) {
 	if vec, ok := v.(Vector); ok {
-		switch vec.(type) {
-		case *vec2:
+		switch vec.Tag() {
+		case VEC2:
 			if k == VEC2 {
 				return vec, true
 			}
-		case *vec3:
+		case VEC3:
 			if k == VEC3 {
 				return vec, true
 			}
-		case *vec4:
+		case VEC4:
 			if k == VEC4 {
 				return vec, true
 			}
 		}
 	}
 	return nil, false
-
 }
 
 func ToVector(L *l.LState, v l.LValue) Vector {
@@ -55,234 +365,20 @@ func toVector(L *l.LState, v l.LValue, msg toErrMsgs) Vector {
 	return nil
 }
 
-type VecN struct {
-	v []float32
+func Vec2(x, y float32) *VecN {
+	return NewVecNFrom(VEC2, []float32{x, y})
 }
 
-func NewVecN(n int) *VecN {
-	if shouldPool {
-		return &VecN{v: grabFromPool(n)}
-	} else {
-		return &VecN{v: make([]float32, n)}
-	}
+func Vec3(x, y, z float32) *VecN {
+	return NewVecNFrom(VEC3, []float32{x, y, z})
 }
 
-func NewVecNFrom(initial []float32) *VecN {
-	if initial == nil {
-		return &VecN{}
-	}
-	var internal []float32
-	if shouldPool {
-		internal = grabFromPool(len(initial))
-	} else {
-		internal = make([]float32, len(initial))
-	}
-	copy(internal, initial)
-	return &VecN{v: internal}
+func Vec4(x, y, z, w float32) *VecN {
+	return NewVecNFrom(VEC4, []float32{x, y, z, w})
 }
 
-func (v VecN) Raw() []float32 {
-	return v.v
-}
-
-func (v VecN) Get(i int) float32 {
-	return v.v[i]
-}
-
-func (v *VecN) Set(i int, val float32) {
-	v.v[i] = val
-}
-
-func (v *VecN) destroy() {
-	if v == nil || v.v == nil {
-		return
-	}
-
-	if shouldPool {
-		returnToPool(v.v)
-	}
-	v.v = nil
-}
-
-func (v *VecN) Len() float32 {
-	if v == nil {
-		return float32(glm.NaN())
-	}
-	if len(v.v) == 0 {
-		return 0
-	}
-
-	return float32(glm.Sqrt(float64(v.dot(v))))
-}
-
-//func (v *VecN) Resize(n int) *VecN {
-//	if v == nil {
-//		return NewVecN(n)
-//	}
-//
-//	if n <= cap(v.v) {
-//		if v.v != nil {
-//			v.v = v.v[:n]
-//		} else {
-//			v.v = []float32{}
-//		}
-//		return v
-//	}
-//
-//	if shouldPool && v.v != nil {
-//		returnToPool(v.v)
-//	}
-//	*v = (*NewVecN(n))
-//
-//	return v
-//}
-
-//func (v *VecN) SetBackingSlice(s []float32) {
-//	v.v = s
-//}
-
-//func (v *VecN) Size() int {
-//	return len(v.v)
-//}
-
-//func (v *VecN) Cap() int {
-//	return cap(v.v)
-//}
-
-//func (v *VecN) zero(n int) {
-//	v.Resize(n)
-//	for i := range v.v {
-//		v.v[i] = 0
-//	}
-//}
-
-func (v *VecN) add(a *VecN) *VecN {
-	if v == nil || a == nil {
-		return nil
-	}
-	size := intMin(len(v.v), len(a.v))
-	dst := NewVecN(size)
-
-	for i := 0; i < size; i++ {
-		dst.v[i] = v.v[i] + a.v[i]
-	}
-
-	return dst
-}
-
-func (v *VecN) sub(s *VecN) *VecN {
-	if v == nil || s == nil {
-		return nil
-	}
-	size := intMin(len(v.v), len(s.v))
-	dst := NewVecN(size)
-
-	for i := 0; i < size; i++ {
-		dst.v[i] = v.v[i] - s.v[i]
-	}
-
-	return dst
-}
-
-func (v *VecN) mul(c float32) *VecN {
-	if v == nil {
-		return nil
-	}
-
-	dst := NewVecN(len(v.v))
-
-	for i, el := range v.v {
-		dst.v[i] = el * c
-	}
-
-	return dst
-}
-
-func (v *VecN) dot(o *VecN) float32 {
-	if v == nil || o == nil || len(v.v) != len(o.v) {
-		return float32(glm.NaN())
-	}
-
-	var result float32 = 0.0
-	for i, el := range v.v {
-		result += el * o.v[i]
-	}
-
-	return result
-}
-
-func (v *VecN) cross(o *VecN) *VecN {
-	if v == nil || o == nil {
-		return nil
-	}
-	if len(v.v) != 3 || len(o.v) != 3 {
-		panic("Cannot take binary cross product of non-3D elements (7D cross product not implemented)")
-	}
-
-	dst := NewVecN(3)
-	dst.v[0], dst.v[1], dst.v[2] = v.v[1]*o.v[2]-v.v[2]*o.v[1], v.v[2]*o.v[0]-v.v[0]*o.v[2], v.v[0]*o.v[1]-v.v[1]*o.v[0]
-	return dst
-}
-
-func (v *VecN) Normalize() *VecN {
-	if v == nil {
-		return nil
-	}
-	return v.mul(1 / v.Len())
-}
-
-type vec2 struct {
-	*VecN
-}
-
-func (*vec2) Tag() string {
-	return VEC2
-}
-
-func (v *vec2) Normalize() Vector {
-	return v.Normalize()
-}
-
-func Vec2(x, y float32) *vec2 {
-	return &vec2{
-		NewVecNFrom([]float32{x, y}),
-	}
-}
-
-type vec3 struct {
-	*VecN
-}
-
-func (*vec3) Tag() string {
-	return VEC3
-}
-
-func (v *vec3) Normalize() Vector {
-	return v.Normalize()
-}
-
-func Vec3(x, y, z float32) *vec3 {
-	return &vec3{
-		NewVecNFrom([]float32{x, y, z}),
-	}
-}
-
-type vec4 struct {
-	*VecN
-}
-
-func (*vec4) Tag() string {
-	return VEC4
-}
-
-func (v *vec4) Normalize() Vector {
-	return v.Normalize()
-}
-
-func Vec4(x, y, z, w float32) *vec4 {
-	return &vec4{
-		NewVecNFrom([]float32{x, y, z, w}),
-	}
+func VecUnp(v ...float32) *VecN {
+	return NewVecNFrom("", v)
 }
 
 func lVec(k string) l.LGFunction {
@@ -316,12 +412,15 @@ func UnpackToVec(L *l.LState, from int, k string, ignore bool) Vector {
 			ud := unp.(*l.LUserData)
 			d := ud.Value
 			switch dt := d.(type) {
-			case *vec2:
-				list = unpVec(2, dt)
-			case *vec3:
-				list = unpVec(3, dt)
-			case *vec4:
-				list = unpVec(4, dt)
+			case Vector:
+				switch dt.Tag() {
+				case VEC2:
+					list = unpVec(2, dt)
+				case VEC3:
+					list = unpVec(3, dt)
+				case VEC4:
+					list = unpVec(4, dt)
+				}
 			}
 		default:
 			if !ignore {
@@ -341,17 +440,7 @@ func UnpackToVec(L *l.LState, from int, k string, ignore bool) Vector {
 			list = append(list[:idx], list[idx+1:]...)
 		}
 	}
-	rv := NewVecNFrom(list)
-	var ret Vector
-	switch k {
-	case VEC2:
-		ret = &vec2{rv}
-	case VEC3:
-		ret = &vec3{rv}
-	case VEC4:
-		ret = &vec4{rv}
-	}
-	return ret
+	return NewVecNFrom(k, list)
 }
 
 func vecIndex(t *lua.Table, _ string) l.LGFunction {

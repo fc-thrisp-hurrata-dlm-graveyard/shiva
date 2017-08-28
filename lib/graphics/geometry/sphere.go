@@ -7,7 +7,7 @@ import (
 	glm "math"
 )
 
-type Sphere struct {
+type sphere struct {
 	Geometry
 	Radius         float64
 	WidthSegments  int
@@ -18,25 +18,24 @@ type Sphere struct {
 	ThetaLength    float64
 }
 
-func NewSphere(
+func Sphere(
 	radius float64,
 	wSegments, hSegments int,
 	phiStart, phiLength, thetaStart, thetaLength float64,
-) *Sphere {
-	s := &Sphere{
+) *sphere {
+	s := &sphere{
 		New(),
 		radius,
 		wSegments, hSegments,
 		phiStart, phiLength, thetaStart, thetaLength,
 	}
+
 	thetaEnd := thetaStart + thetaLength
 	vertexCount := (wSegments + 1) * (hSegments + 1)
-
 	positions := math.NewAF32(vertexCount*3, vertexCount*3)
 	normals := math.NewAF32(vertexCount*3, vertexCount*3)
 	uvs := math.NewAF32(vertexCount*2, vertexCount*2)
 	indices := math.NewAU32(0, vertexCount)
-
 	index := 0
 	vertices := make([][]uint32, 0)
 	var normal math.Vector = math.Vec3(0, 0, 0)
@@ -49,14 +48,14 @@ func NewSphere(
 			px := -radius * glm.Cos(phiStart+u*phiLength) * glm.Sin(thetaStart+v*thetaLength)
 			py := radius * glm.Cos(thetaStart+v*thetaLength)
 			pz := radius * glm.Sin(phiStart+u*phiLength) * glm.Sin(thetaStart+v*thetaLength)
-			normal.Set(1, float32(px))
-			normal.Set(2, float32(py))
-			normal.Set(3, float32(pz))
+			normal.Set(0, float32(px))
+			normal.Set(1, float32(py))
+			normal.Set(2, float32(pz))
 			normal.Normalize()
 
 			positions.Set(index*3, float32(px), float32(py), float32(pz))
-			//normals.SetVector3(index*3, &normal)
-			//uvs.Set(index*2, float32(u), float32(v))
+			normals.Set(index*3, normal.Raw()...)
+			uvs.Set(index*2, float32(u), float32(v))
 			verticesRow = append(verticesRow, uint32(index))
 			index++
 		}

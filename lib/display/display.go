@@ -54,8 +54,6 @@ type DisplayData struct {
 	*viewport
 	title      string
 	clearColor math.Vector
-	// userProjection bool
-	// projection Matrice
 }
 
 func DefaultDisplayData() *DisplayData {
@@ -63,8 +61,6 @@ func DefaultDisplayData() *DisplayData {
 		&viewport{0, 0, 640, 480},
 		"shv",
 		math.Vec4(0, 0, 0, 1),
-		// false,
-		// Matrice,
 	}
 }
 
@@ -112,7 +108,7 @@ func New(p graphics.Provider, renders string) (*Display, error) {
 	_, major, minor := r.Version()
 	glfw.WindowHint(glfw.ContextVersionMajor, major)
 	glfw.WindowHint(glfw.ContextVersionMinor, minor)
-	scene := scene.NewScene(r)
+	scene := scene.NewScene(r, nativeWindow)
 
 	nativeWindow.MakeContextCurrent()
 	glfw.SwapInterval(1)
@@ -151,6 +147,7 @@ func (d *Display) posCallback(w *glfw.Window, xpos int, ypos int) {
 }
 
 func (d *Display) sizeCallback(w *glfw.Window, width int, height int) {
+	//notify scene in some way perhaps
 	spew.Dump("sizeCallback")
 }
 

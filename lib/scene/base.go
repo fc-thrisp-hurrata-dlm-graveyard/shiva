@@ -11,9 +11,10 @@ const lDummyNodeClass = "NDUMMY"
 
 func Dummy(tag string) Node {
 	return newNode(tag, func(r render.Renderer, n Node) {
-		for _, nd := range n.Out() {
-			nd.Render(r)
-		}
+		//log.Println("dummy node render")
+		//for _, nd := range n.Out() {
+		//	nd.Render(r)
+		//}
 	}, defaultRemovalFn, defaultReplaceFn, lDummyNodeClass, lNodeClass)
 }
 
@@ -27,9 +28,7 @@ const lRootNodeClass = "NROOT"
 
 func Root(tag string) Node {
 	return newNode(tag, func(r render.Renderer, n Node) {
-		for _, nd := range n.Out() {
-			nd.Render(r)
-		}
+		//log.Println("root node render")
 	}, defaultRemovalFn, defaultReplaceFn, lRootNodeClass, lNodeClass)
 }
 
@@ -43,9 +42,10 @@ const lGroupNodeClass = "NGROUP"
 
 func Group(tag string, ns ...Node) Node {
 	return newNode(tag, func(r render.Renderer, n Node) {
-		for _, nd := range n.Out() {
-			nd.Render(r)
-		}
+		//log.Println("group node render")
+		//for _, nd := range n.Out() {
+		//	nd.Render(r)
+		//}
 	}, defaultRemovalFn, defaultReplaceFn, lGroupNodeClass, lNodeClass)
 }
 

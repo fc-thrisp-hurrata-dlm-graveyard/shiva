@@ -7,6 +7,7 @@ import (
 	"github.com/Laughs-In-Flowers/shiva/lib/lua"
 	"github.com/Laughs-In-Flowers/shiva/lib/render"
 	"github.com/Laughs-In-Flowers/shiva/lib/xrror"
+
 	l "github.com/yuin/gopher-lua"
 )
 
@@ -20,6 +21,7 @@ type Node interface {
 	Grapher
 	Comparer
 	Counter
+	Terminater
 	//Removal
 }
 
@@ -129,6 +131,15 @@ type Counter interface {
 	Count() int
 }
 
+type Terminater interface {
+	Terminal() bool
+	SetTerminal(bool)
+}
+
+type Lighter interface {
+	Light() LightKind
+}
+
 type removalFunc func(*node) error
 
 type replaceFunc func(*node, *node) error
@@ -137,13 +148,15 @@ type node struct {
 	ecs.Entity
 	*recurser
 	*actor
-	tag    string
-	lclass []string
-	rfn    innerRenderFunc
-	rmfn   removalFunc
-	rpfn   replaceFunc
-	in     []Node
-	out    []Node
+	tag       string
+	lclass    []string
+	rfn       innerRenderFunc
+	rmfn      removalFunc
+	rpfn      replaceFunc
+	in        []Node
+	out       []Node
+	lightKind LightKind
+	terminal  bool
 }
 
 func newNode(
@@ -186,6 +199,11 @@ func (n *node) Render(r render.Renderer) {
 	n.rExecute(func() {
 		n.rfn(r, n)
 	})
+	if !n.terminal {
+		for _, nd := range n.Out() {
+			nd.Render(r)
+		}
+	}
 }
 
 func (n *node) In() []Node {
@@ -328,6 +346,14 @@ func (n *node) Count() int {
 	return count
 }
 
+func (n *node) Terminal() bool {
+	return n.terminal
+}
+
+func (n *node) SetTerminal(as bool) {
+	n.terminal = as
+}
+
 func pushNode(L *l.LState, n Node) int {
 	fn := func(u *l.LUserData) {
 		u.Value = n
@@ -358,7 +384,7 @@ func nodeChain(t *lua.Table, k string) l.LGFunction {
 		parent := checkNode(L, 1)
 		child := checkNode(L, 2)
 		parent.Append(NOUT, child)
-		return 0
+		return pushNode(L, parent)
 	}
 }
 
@@ -552,13 +578,16 @@ func nodeAction(L *l.LState, u *l.LUserData, n Node) int {
 	return 0
 }
 
-func defaultNodeTable(class string, mfn ...*lua.LMetaFunc) *lua.Table {
-	lmf := []*lua.LMetaFunc{
+func defaultIdxMetaFuncs() []*lua.LMetaFunc {
+	return []*lua.LMetaFunc{
 		lua.DefaultIdx("__index"),
 		lua.DefaultIdx("__newindex"),
 		{"__pow", nodeChain},
 	}
-	lmf = append(lmf, mfn...)
+}
+
+func defaultNodeTable(class string, mfn ...*lua.LMetaFunc) *lua.Table {
+	lmf := append(defaultIdxMetaFuncs(), mfn...)
 	return &lua.Table{
 		class,
 		[]*lua.Table{nodeTable},
@@ -585,17 +614,6 @@ var nodeTable = &lua.Table{
 		"replace": nodeMember(nodeReplace),
 		"action":  nodeMember(nodeAction),
 	},
-}
-
-func tagFnFor(s string, pos int) func(L *l.LState) string {
-	return func(L *l.LState) string {
-		var ret = s
-		rtag := L.ToString(pos)
-		if rtag != "" {
-			ret = rtag
-		}
-		return ret
-	}
 }
 
 // TODO: tbd nodes

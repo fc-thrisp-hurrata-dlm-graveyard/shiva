@@ -77,6 +77,19 @@ func Pf32(L *l.LState, pos int) float32 {
 	return float32(num)
 }
 
+type MxPos struct {
+	Correspondence, Row, Column int
+}
+
+var (
+	// vector x,y,z to matrice raw[12,13,14]
+	TranslateMxPos = []MxPos{
+		{0, 0, 3},
+		{1, 1, 3},
+		{2, 2, 3},
+	}
+)
+
 // TODO: this is a fucking piece of uncooperative shit
 //type fmts struct {
 //value     float64

@@ -88,8 +88,9 @@ func Basic() Material {
 type Materializer interface {
 	graphics.Initializer
 	graphics.Closer
-	graphics.Renderable
+	graphics.Providable
 	graphics.RefCounter
+	//graphics.Renderable
 	Shaderer
 }
 
@@ -119,11 +120,11 @@ func (m *material) Close() {
 	m.Initialize()
 }
 
-func (m *material) Renderable() bool {
-	return false
+func (m *material) Providable() bool {
+	return true
 }
 
-func (m *material) SetRenderable(b bool) {}
+func (m *material) SetProvidable(b bool) {}
 
 func (m *material) Provide(p graphics.Provider) {
 	switch m.sideVisible {

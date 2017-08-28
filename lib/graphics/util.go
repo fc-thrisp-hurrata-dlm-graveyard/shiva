@@ -18,8 +18,8 @@ type Moder interface {
 	SetMode(Enum)
 }
 
-type Renderable interface {
-	Renderable() bool
-	SetRenderable(bool)
+type Providable interface {
+	//Providable() bool
+	//SetProvidable(bool)
 	Provide(Provider)
 }

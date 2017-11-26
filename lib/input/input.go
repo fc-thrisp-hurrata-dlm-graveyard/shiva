@@ -42,8 +42,6 @@ func (j *joystickConnectInput) Subscribe(ss ...jcsubscriber) {
 	j.subscribers = append(j.subscribers, ss...)
 }
 
-// joystick axis / button make on plugin --> subscribe
-
 var KeyInput *keyInput
 
 type ksubscriber interface {
@@ -305,8 +303,6 @@ func (d *dropInput) Subscribe(ss ...dsubscriber) {
 	d.subscribers = append(d.subscribers, ss...)
 }
 
-// input event poll
-// secondary input systems, e.g. input subscribers fan out, queuing, reporting
 var CurrentInputSystem *inputSystem
 
 type inputSystem struct{}

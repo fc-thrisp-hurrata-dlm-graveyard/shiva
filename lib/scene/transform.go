@@ -177,7 +177,8 @@ func lrotate(L *l.LState) int {
 
 var lRotateNodeTable = &lua.Table{
 	lRotateNodeClass,
-	nil, nil, nil, nil,
+	[]*lua.Table{nodeTable},
+	nil, nil, nil,
 }
 
 type direction struct {
@@ -218,7 +219,8 @@ func ldirection(L *l.LState) int {
 
 var lDirectionNodeTable = &lua.Table{
 	lDirectionNodeClass,
-	nil, nil, nil, nil,
+	[]*lua.Table{nodeTable},
+	nil, nil, nil,
 }
 
 type position struct {
@@ -307,6 +309,7 @@ const lPositionNodeClass = "NPOSITION"
 func Position(tag string) Node {
 	pp := newPosition()
 	nn := newNode(tag, func(r render.Renderer, n Node) {
+		//
 		pp.updateMatrixWorld(r)
 	}, defaultRemovalFn, defaultReplaceFn, lPositionNodeClass, lNodeClass)
 
@@ -326,5 +329,6 @@ func lposition(L *l.LState) int {
 
 var lPositionNodeTable = &lua.Table{
 	lPositionNodeClass,
-	nil, nil, nil, nil,
+	[]*lua.Table{nodeTable},
+	nil, nil, nil,
 }

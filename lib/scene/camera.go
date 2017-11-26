@@ -7,7 +7,6 @@ import (
 	"github.com/Laughs-In-Flowers/shiva/lib/math"
 	"github.com/Laughs-In-Flowers/shiva/lib/render"
 	"github.com/Laughs-In-Flowers/shiva/lib/xrror"
-	"github.com/davecgh/go-spew/spew"
 
 	l "github.com/yuin/gopher-lua"
 )
@@ -18,7 +17,7 @@ const (
 	NOT_A_CAMERA_TYPE CamT = iota
 	PERSPECTIVE
 	ORTHOGRAPHIC
-	USER_DEFINED
+	CUSTOM
 )
 
 func StringToCamT(s string) CamT {
@@ -27,8 +26,8 @@ func StringToCamT(s string) CamT {
 		return PERSPECTIVE
 	case "orthographic":
 		return ORTHOGRAPHIC
-	case "user_defined":
-		return USER_DEFINED
+	case "custom":
+		return CUSTOM
 	}
 	return NOT_A_CAMERA_TYPE
 }
@@ -282,14 +281,8 @@ func Camera(tag string, c *cam) Node {
 	cc := newCamera(c)
 	nn := newNode(tag, func(r render.Renderer, n Node) {
 		cc.updateMatrixWorld(r)
-		//log.Println("camera render func")
-		//set renderer view matrix
 		r.SetViewMatrice(cc.ViewMatrix())
-		//set renderer projection matrix
 		r.SetProjectionMatrice(cc.ProjectionMatrix())
-		//spew.Dump("camera node render")
-		//spew.Dump(cc)
-		//spew.Dump(r.ViewMatrice(), r.ProjectionMatrice())
 	}, defaultRemovalFn, defaultReplaceFn, lCameraNodeClass, lNodeClass)
 
 	return &cameraNode{
@@ -323,8 +316,8 @@ func buildCam(L *l.LState, from int) (*cam, error) {
 	}
 
 	tableFn := func(L *l.LState, from int) (*cam, error) {
-		t := L.CheckTable(from)
-		spew.Dump(t)
+		//t := L.CheckTable(from)
+		//spew.Dump(t)
 		return nil, nil
 	}
 

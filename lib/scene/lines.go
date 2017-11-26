@@ -21,7 +21,7 @@ func NewLines(tag string, g geometry.Geometry, m material.Material) *lines {
 		"LINES",
 		g,
 		func(r render.Renderer) {
-			//log.Println("lines render func")
+			//
 		},
 		graphics.LINES,
 	)

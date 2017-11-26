@@ -74,7 +74,8 @@ QUIT:
 	e.Close()
 }
 
-// needs actual reload on restart, this loads once afaik
+// TODO: needs actual reload on restart, this loads once afaik
+// i.e. doesn't work as advertised
 func reload(e *Engine, hefn HandleErrorFunc, llfn LoadLuaModuleFunc) {
 	hefn(e, llfn())
 }

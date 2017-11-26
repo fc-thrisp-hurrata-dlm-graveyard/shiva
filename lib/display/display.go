@@ -9,7 +9,6 @@ import (
 	"github.com/Laughs-In-Flowers/shiva/lib/render"
 	"github.com/Laughs-In-Flowers/shiva/lib/scene"
 	"github.com/Laughs-In-Flowers/shiva/lib/xrror"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/go-gl/glfw/v3.2/glfw"
 
 	l "github.com/yuin/gopher-lua"
@@ -143,32 +142,32 @@ func (d *Display) Update(int64) error {
 func (d *Display) Remove(uint64) {}
 
 func (d *Display) posCallback(w *glfw.Window, xpos int, ypos int) {
-	spew.Dump("posCallback")
+	//spew.Dump("posCallback")
 }
 
 func (d *Display) sizeCallback(w *glfw.Window, width int, height int) {
 	//notify scene in some way perhaps
-	spew.Dump("sizeCallback")
+	//spew.Dump("sizeCallback")
 }
 
 func (d *Display) framebufferSizeCallback(w *glfw.Window, width int, height int) {
-	spew.Dump("framebuffersizeCallback")
+	//spew.Dump("framebuffersizeCallback")
 }
 
 func (d *Display) closeCallback(w *glfw.Window) {
-	spew.Dump("closeCallback")
+	//spew.Dump("closeCallback")
 }
 
 func (d *Display) refreshCallback(w *glfw.Window) {
-	spew.Dump("refreshCallback")
+	//spew.Dump("refreshCallback")
 }
 
 func (d *Display) focusCallback(w *glfw.Window, focused bool) {
-	spew.Dump("focusCallback")
+	//spew.Dump("focusCallback")
 }
 
 func (d *Display) iconifyCallback(w *glfw.Window, iconified bool) {
-	spew.Dump("iconifyCallback")
+	//spew.Dump("iconifyCallback")
 }
 
 func (d *Display) setTitle(t string) {

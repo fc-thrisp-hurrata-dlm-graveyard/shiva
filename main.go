@@ -11,7 +11,7 @@ import (
 	"github.com/Laughs-In-Flowers/shiva/lib/engine"
 	"github.com/Laughs-In-Flowers/shiva/lib/graphics"
 
-	// initiailize & register providers with graphics package
+	// initialize & register providers with graphics package
 	_ "github.com/Laughs-In-Flowers/shiva/lib/graphics/providers"
 )
 
@@ -39,15 +39,11 @@ func tFlags(fs *flip.FlagSet, o *Options) *flip.FlagSet {
 
 type Execute func(*Options) error
 
-type Executing interface {
-	Run(*Options) error
-}
-
 type executing struct {
 	has []Execute
 }
 
-func NewExecuting(e ...Execute) *executing {
+func newExecuting(e ...Execute) *executing {
 	return &executing{
 		e,
 	}
@@ -70,9 +66,9 @@ func debugLog(o *Options) error {
 	return nil
 }
 
-var topExecute = NewExecuting(debugLog)
+var topExecute = newExecuting(debugLog)
 
-func TopCommand(o *Options) flip.Command {
+func topCommand(o *Options) flip.Command {
 	fs := flip.NewFlagSet("top", flip.ContinueOnError)
 	fs = tFlags(fs, o)
 	return flip.NewCommand(
@@ -114,7 +110,7 @@ func pFlags(fs *flip.FlagSet, o *Options) *flip.FlagSet {
 	return fs
 }
 
-func PlayCommand(o *Options) flip.Command {
+func playCommand(o *Options) flip.Command {
 	fs := flip.NewFlagSet("play", flip.ContinueOnError)
 	fs = pFlags(fs, o)
 	return flip.NewCommand(
@@ -148,8 +144,8 @@ func init() {
 	options = defaultOptions()
 	log.SetFormatter("shiva_text", log.MakeTextFormatter(versionPackage))
 	C = flip.BaseWithVersion(versionPackage, versionTag, versionHash, versionDate)
-	C.RegisterGroup("top", 1, TopCommand(options))
-	C.RegisterGroup("play", 10, PlayCommand(options))
+	C.RegisterGroup("top", 1, topCommand(options))
+	C.RegisterGroup("play", 10, playCommand(options))
 }
 
 func main() {

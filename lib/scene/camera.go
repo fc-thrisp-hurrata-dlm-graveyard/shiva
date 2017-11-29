@@ -401,7 +401,7 @@ var lCameraNodeTable = &lua.Table{
 }
 
 // A default perspective camera.
-func Perspective() {}
+// func Perspective() {}
 
 // A default orthographic camera.
-func Orthographic() {}
+// func Orthographic() {}

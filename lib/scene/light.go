@@ -112,7 +112,7 @@ func Ambient(tag string, intensity float32, color math.Color) *light {
 	}, defaultRemovalFn, defaultReplaceFn, lAmbientLightNodeClass, lLightNodeClass, lNodeClass)
 	n.lightKind = AMBIENT
 	lg.node = n
-	lg.Initialize(AMBIENT)
+	lg.Initialize(n.lightKind)
 	return lg
 }
 

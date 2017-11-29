@@ -254,7 +254,7 @@ func RegisterWith() lua.RegisterWith {
 	return func(m lua.Module) error {
 		sr := &sceneRegister{make([]sceneRegisterFunc, 0)}
 		sr.add(registerWith("scene", lScene, sceneTable))
-		sr.add(registerWith("", nil, nodeTable))
+		//sr.add(registerWith("", nil, nodeTable))
 		sr.add(registerWith("dummy", ldummy, defaultNodeTable(lDummyNodeClass)))
 		sr.add(registerWith("root", lroot, defaultNodeTable(lRootNodeClass)))
 		sr.add(registerWith("group", lgroup, defaultNodeTable(

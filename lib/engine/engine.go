@@ -2,6 +2,7 @@ package engine
 
 import (
 	"os"
+	"path/filepath"
 	"sort"
 	"time"
 
@@ -75,28 +76,9 @@ QUIT:
 }
 
 // TODO: needs actual reload on restart, this loads once afaik
-// i.e. doesn't work as advertised
+// i.e. does not work as advertised
 func reload(e *Engine, hefn HandleErrorFunc, llfn LoadLuaModuleFunc) {
 	hefn(e, llfn())
-}
-
-var (
-	frameDelta int64
-	frameTime  int64
-	frameCount int64
-	FPS        int64
-)
-
-func fps(e *Engine) {
-	now := time.Now().Unix()
-	frameDelta = now - frameTime
-	frameTime = now
-	frameCount = frameCount + 1
-	if frameDelta >= 1 {
-		FPS = frameCount
-		e.FPS = FPS
-		frameCount = 0
-	}
 }
 
 func (e *Engine) HandleError(r error) {
@@ -331,13 +313,6 @@ func eDisplay(e *Engine) error {
 	return err
 }
 
-//func SetDisplay(system) Config {
-//	return NewConfig(50,
-//		func(e *Engine) error {
-//			return nil
-//		})
-//}
-
 func eInput(e *Engine) error {
 	w, err := display.Window()
 	if err != nil {
@@ -353,23 +328,16 @@ func eInput(e *Engine) error {
 	return nil
 }
 
-//func SetInput(system) Config {
-//	return NewConfig(50,
-//		func(e *Engine) error {
-//			return nil
-//		})
-//}
-
 var (
 	luaDir  string = workingDir
 	luaFile string = "main"
 )
 
-func SetLua(dir, file string) Config {
+func SetLua(file string) Config {
 	return NewConfig(8000,
 		func(e *Engine) error {
-			luaDir = dir
-			luaFile = file
+			luaDir = filepath.Dir(file)
+			luaFile = filepath.Base(file)
 			return nil
 		})
 }

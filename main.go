@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/Laughs-In-Flowers/flip"
 	"github.com/Laughs-In-Flowers/log"
@@ -19,19 +20,20 @@ type Options struct {
 	debug     bool
 	formatter string
 	provider  string
-	dir, file string
+	file      string
 }
 
 func defaultOptions() *Options {
 	wd, _ := os.Getwd()
 	defaultProvider := graphics.DefaultProvider.String()
 	return &Options{
-		false, "null", defaultProvider, wd, "main.lua",
+		false, "null", defaultProvider, filepath.Join(wd, "main.lua"),
 	}
 }
 
 func tFlags(fs *flip.FlagSet, o *Options) *flip.FlagSet {
 	fs.BoolVar(&o.debug, "debug", o.debug, "Set engine debug to true.")
+	fs.StringVar(&o.file, "file", o.file, "The main lua file argument to pass to the engine.")
 	fs.StringVar(&o.formatter, "formatter", o.formatter, "Specify the log formatter.")
 	fs.StringVar(&o.provider, "provider", o.provider, "String tag to specify the graphics provder.")
 	return fs
@@ -76,9 +78,10 @@ func topCommand(o *Options) flip.Command {
 		"shiva",
 		"shiva top options",
 		1,
-		func(c context.Context, a []string) flip.ExitStatus {
+		false,
+		func(c context.Context, a []string) (context.Context, flip.ExitStatus) {
 			topExecute.Run(o)
-			return flip.ExitNo
+			return c, flip.ExitNo
 		},
 		fs,
 	)
@@ -95,7 +98,7 @@ func newEngine(o *Options) *engine.Engine {
 	configuration := []engine.Config{
 		engine.SetLogger(o.formatter),
 		engine.SetGraphics(o.provider),
-		engine.SetLua(o.dir, o.file),
+		engine.SetLua(o.file),
 	}
 	v, err := engine.New(o.debug, configuration...)
 	if err != nil {
@@ -104,26 +107,19 @@ func newEngine(o *Options) *engine.Engine {
 	return v
 }
 
-func pFlags(fs *flip.FlagSet, o *Options) *flip.FlagSet {
-	fs.StringVar(&o.dir, "dir", o.dir, "The lua directory argument to pass to the engine.")
-	fs.StringVar(&o.file, "file", o.file, "The main lua file argument to pass to the engine.")
-	return fs
-}
-
 func playCommand(o *Options) flip.Command {
-	fs := flip.NewFlagSet("play", flip.ContinueOnError)
-	fs = pFlags(fs, o)
 	return flip.NewCommand(
 		"",
 		"play",
 		"shiva play",
 		1,
-		func(c context.Context, a []string) flip.ExitStatus {
+		false,
+		func(c context.Context, a []string) (context.Context, flip.ExitStatus) {
 			e := newEngine(o)
 			e.Run()
-			return flip.ExitSuccess
+			return c, flip.ExitSuccess
 		},
-		fs,
+		flip.NewFlagSet("play", flip.ContinueOnError),
 	)
 }
 
@@ -137,19 +133,21 @@ var (
 var (
 	options     *Options
 	currentPath string
-	C           *flip.Commander
+	F           flip.Flip
 )
 
 func init() {
 	options = defaultOptions()
 	log.SetFormatter("shiva_text", log.MakeTextFormatter(versionPackage))
-	C = flip.BaseWithVersion(versionPackage, versionTag, versionHash, versionDate)
-	C.RegisterGroup("top", 1, topCommand(options))
-	C.RegisterGroup("play", 10, playCommand(options))
+	F = flip.Base
+	F.AddCommand("version", versionPackage, versionTag, versionHash, versionDate).
+		AddCommand("help").
+		SetGroup("top", -1, topCommand(options)).
+		SetGroup("play", 1, playCommand(options))
 }
 
 func main() {
 	ctx := context.Background()
-	C.Execute(ctx, os.Args)
+	F.Execute(ctx, os.Args)
 	os.Exit(0)
 }

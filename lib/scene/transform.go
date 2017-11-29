@@ -94,7 +94,9 @@ func ltranslate(L *l.LState) int {
 var lTranslateNodeTable = &lua.Table{
 	lTranslateNodeClass,
 	[]*lua.Table{nodeTable},
-	nil, nil, nil,
+	[]*lua.LMetaFunc{},
+	map[string]l.LGFunction{},
+	map[string]l.LGFunction{},
 }
 
 type scale struct {
@@ -136,7 +138,9 @@ func lscale(L *l.LState) int {
 var lScaleNodeTable = &lua.Table{
 	lScaleNodeClass,
 	[]*lua.Table{nodeTable},
-	nil, nil, nil,
+	[]*lua.LMetaFunc{},
+	map[string]l.LGFunction{},
+	map[string]l.LGFunction{},
 }
 
 type rotate struct {
@@ -178,7 +182,9 @@ func lrotate(L *l.LState) int {
 var lRotateNodeTable = &lua.Table{
 	lRotateNodeClass,
 	[]*lua.Table{nodeTable},
-	nil, nil, nil,
+	[]*lua.LMetaFunc{},
+	map[string]l.LGFunction{},
+	map[string]l.LGFunction{},
 }
 
 type direction struct {
@@ -220,7 +226,9 @@ func ldirection(L *l.LState) int {
 var lDirectionNodeTable = &lua.Table{
 	lDirectionNodeClass,
 	[]*lua.Table{nodeTable},
-	nil, nil, nil,
+	[]*lua.LMetaFunc{},
+	map[string]l.LGFunction{},
+	map[string]l.LGFunction{},
 }
 
 type position struct {
@@ -330,5 +338,7 @@ func lposition(L *l.LState) int {
 var lPositionNodeTable = &lua.Table{
 	lPositionNodeClass,
 	[]*lua.Table{nodeTable},
-	nil, nil, nil,
+	[]*lua.LMetaFunc{},
+	map[string]l.LGFunction{},
+	map[string]l.LGFunction{},
 }

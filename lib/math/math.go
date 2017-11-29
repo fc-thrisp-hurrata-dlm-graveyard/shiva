@@ -77,7 +77,7 @@ func ClampInt(x, a, b int) int {
 	return x
 }
 
-// Clamp value to range <a, inf)
+// Clamp value to range <a, inf>
 func ClampBotton(x, a float32) float32 {
 	if x < a {
 		return a
